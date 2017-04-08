@@ -8,9 +8,11 @@ import android.hardware.SensorManager;
 import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.TextView;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -50,7 +52,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         last_y = 0;
         last_z = 0;
 
-        new RetrieveFeedTask().execute("loool");
+        String result = null;
+        try {
+            result  = new RetrieveFeedTask().execute("loool").get();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        }
+
+        if (result == null) {
+            osa_x.setText("Not sent");
+        } else {
+            osa_x.setText(result);
+        }
     }
 
     @Override
@@ -61,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         if (diff > 6) {
             osa_x.setText("Gesture fajrrrrrrrrd");
         } else {
-            osa_x.setText("Hello World!");
+            //osa_x.setText("Hello World!");
         }
 
         last_x = event.values[0];
@@ -94,12 +109,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         protected String doInBackground(String... urls) {
 
             HTTPBlablablah example = new HTTPBlablablah();
-            String json = example.gestureJSON("1");
+            String json = example.gestureJSON("left");
             String response;
             try {
-                response = example.post("http://10.10.4.117:8080", json);
+                response = example.post("http://10.10.4.117:8080/request", json);
             } catch (IOException e) {
-                return null;
+                return e.toString();
             }
 
             return response;
@@ -129,8 +144,9 @@ class HTTPBlablablah {
     }
 
     String gestureJSON(String gestureType) {
-        return "{'user_id':'0',"
-                + "'meta':'" + gestureType
-                + "'}";
+        String requestString = "{"
+                + "\"meta\":\"" + gestureType
+                + "\"}";
+        return requestString;
     }
 }
